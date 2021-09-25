@@ -43,9 +43,9 @@ interface Options {
   scanSize?: number
 
   /**
-   * Sets gzip compression level.
+   * Sets gzip compression level. If unset, does not compress.
    *
-   * If unset, does not compress.
+   * **Use with caution!** In most cases compressing small data will result in *larger* sizes.
    */
   compressLevel?: number
 }
