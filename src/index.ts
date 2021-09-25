@@ -2,6 +2,7 @@ import { Decoder, Encoder } from '@msgpack/msgpack'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import { Buffer } from 'node:buffer'
+import { chunk, zip } from './arrayUtils.js'
 import { codec } from './codecs.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -10,12 +11,18 @@ interface AsyncProxy<T extends {}> {
 
   delete<K extends keyof T>(key: K): Promise<boolean>
 
+  entries<K extends keyof T>(): AsyncIterable<readonly [K, T[K]]>
+
   get<K extends keyof T>(key: K, defaultValue: T[K]): Promise<T[K]>
   get<K extends keyof T>(key: K, defaultValue?: T[K]): Promise<T[K] | undefined>
 
   has<K extends keyof T>(key: K): Promise<boolean>
 
+  keys<K extends keyof T>(): AsyncIterable<K>
+
   set<K extends keyof T>(key: K, value: T[K]): Promise<void>
+
+  values<K extends keyof T>(): AsyncIterable<T[K]>
 }
 
 interface Options {
@@ -28,6 +35,13 @@ interface Options {
    * Redis Connection
    */
   redis: RedisInterface | RedisOptions
+
+  /**
+   * Redis Scan Size
+   *
+   * Defaults to `10`
+   */
+  scanSize?: number
 }
 
 /**
@@ -36,6 +50,9 @@ interface Options {
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
+  const storeKey = options.key
+  const scanSize = options.scanSize ?? 10
+
   // eslint-disable-next-line prettier/prettier
   const redis = options.redis instanceof Redis
     ? options.redis
@@ -76,6 +93,52 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
       )
 
       await redis.hset(options.key, key.toString(), buffer)
+    },
+
+    async *keys() {
+      const keys = await redis.hkeys(storeKey)
+
+      for (const key of keys) {
+        // Hacky fix to make generics work
+        yield key as any
+      }
+    },
+
+    async *values() {
+      for await (const [, value] of this.entries()) {
+        // Hacky fix to make generics work
+        yield value as any
+      }
+    },
+
+    async *entries() {
+      const stream = redis.hscanStream(storeKey, { count: scanSize })
+      for await (const data of stream) {
+        const chunked = chunk(data, 2)
+
+        const p = redis.pipeline()
+        for (const [key] of chunked) {
+          p.hgetBuffer(storeKey, key as string)
+        }
+
+        const results = await p.exec()
+        const errors = results.map(([error]) => error)
+        const error = errors.find(error => error !== null)
+        if (error instanceof Error) {
+          throw error
+        }
+
+        const keys = chunked.map(([key]) => key)
+        const values = results.map(([, value]) => value as unknown)
+        const zipped = zip(keys, values)
+
+        for (const [key, rawValue] of zipped) {
+          const value = decoder.decode(rawValue as Buffer)
+
+          // Hacky fix to make generics work
+          yield [key, value] as any
+        }
+      }
     },
   }
 
