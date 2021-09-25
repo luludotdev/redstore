@@ -12,7 +12,9 @@ interface Codec {
   decode(buffer: Buffer): Promise<unknown>
 }
 
-export const createCodec = (compress = false) => {
+export const createCodec = (level?: number) => {
+  const compress = level !== undefined
+
   const encoder = new Encoder(extensionCodecs)
   const decoder = new Decoder(extensionCodecs)
 
@@ -26,7 +28,7 @@ export const createCodec = (compress = false) => {
       )
 
       if (compress) {
-        const compressed = await gzip(buffer)
+        const compressed = await gzip(buffer, { level })
         return compressed
       }
 

@@ -43,11 +43,11 @@ interface Options {
   scanSize?: number
 
   /**
-   * Enable per-key gzip compression
+   * Sets gzip compression level.
    *
-   * Defaults to `false`
+   * If unset, does not compress.
    */
-  compress?: boolean
+  compressLevel?: number
 }
 
 /**
@@ -64,7 +64,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     ? options.redis
     : new Redis(options.redis)
 
-  const { encode, decode } = createCodec(options.compress)
+  const { encode, decode } = createCodec(options.compressLevel)
 
   const genKey: (key: unknown) => string = key => {
     if (typeof key === 'string') return key
