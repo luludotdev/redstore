@@ -6,8 +6,14 @@ import { codec } from './codecs.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
+  clear<K extends keyof T>(key: K): Promise<void>
+
+  delete<K extends keyof T>(key: K): Promise<boolean>
+
   get<K extends keyof T>(key: K, defaultValue: T[K]): Promise<T[K]>
   get<K extends keyof T>(key: K, defaultValue?: T[K]): Promise<T[K] | undefined>
+
+  has<K extends keyof T>(key: K): Promise<boolean>
 
   set<K extends keyof T>(key: K, value: T[K]): Promise<void>
 }
@@ -39,12 +45,26 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
   const decoder = new Decoder(codec)
 
   const proxy: AsyncProxy<T> = {
+    async clear(key) {
+      await redis.del(options.key, key.toString())
+    },
+
+    async delete(key) {
+      const status = await redis.hdel(options.key, key.toString())
+      return status === 1
+    },
+
     async get(key, defaultValue) {
       const value = await redis.hgetBuffer(options.key, key.toString())
       if (value === null) return defaultValue
 
       const decoded = decoder.decode(value)
       return decoded
+    },
+
+    async has(key) {
+      const status = await redis.hexists(options.key, key.toString())
+      return status === 1
     },
 
     async set(key, value) {
