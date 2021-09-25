@@ -2,6 +2,7 @@ import { Decoder, Encoder } from '@msgpack/msgpack'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import { Buffer } from 'node:buffer'
+import { codec } from './codecs.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
@@ -34,8 +35,8 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     ? options.redis
     : new Redis(options.redis)
 
-  const encoder = new Encoder()
-  const decoder = new Decoder()
+  const encoder = new Encoder(codec)
+  const decoder = new Decoder(codec)
 
   const proxy: AsyncProxy<T> = {
     async get(key, defaultValue) {
