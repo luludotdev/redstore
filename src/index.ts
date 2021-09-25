@@ -61,18 +61,26 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
   const encoder = new Encoder(codec)
   const decoder = new Decoder(codec)
 
+  const genKey: (key: unknown) => string = key => {
+    if (typeof key === 'string') return key
+    if (typeof key === 'symbol') return key.toString()
+    if (typeof key === 'number') return key.toString(10)
+
+    throw new TypeError('invalid key type')
+  }
+
   const proxy: AsyncProxy<T> = {
     async clear(key) {
-      await redis.del(options.key, key.toString())
+      await redis.del(storeKey, genKey(key))
     },
 
     async delete(key) {
-      const status = await redis.hdel(options.key, key.toString())
+      const status = await redis.hdel(storeKey, genKey(key))
       return status === 1
     },
 
     async get(key, defaultValue) {
-      const value = await redis.hgetBuffer(options.key, key.toString())
+      const value = await redis.hgetBuffer(storeKey, genKey(key))
       if (value === null) return defaultValue
 
       const decoded = decoder.decode(value)
@@ -80,7 +88,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     },
 
     async has(key) {
-      const status = await redis.hexists(options.key, key.toString())
+      const status = await redis.hexists(storeKey, genKey(key))
       return status === 1
     },
 
@@ -92,7 +100,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
         encoded.byteLength
       )
 
-      await redis.hset(options.key, key.toString(), buffer)
+      await redis.hset(storeKey, genKey(key), buffer)
     },
 
     async *keys() {
