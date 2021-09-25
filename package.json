@@ -1,5 +1,5 @@
 {
-  "name": "async-store",
+  "name": "@lolpants/redstore",
   "version": "0.1.0",
   "type": "module",
   "exports": "./lib/index.js",
@@ -20,7 +20,7 @@
     "predev": "yarn run clean",
     "dev": "yarn run compile --watch"
   },
-  "repository": "git@github.com:lolPants/async-store.git",
+  "repository": "git@github.com:lolPants/redstore.git",
   "author": "Jack Baron <jackmbaron@gmail.com>",
   "license": "MIT",
   "engines": {
