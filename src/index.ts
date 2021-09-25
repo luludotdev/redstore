@@ -48,8 +48,14 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     },
 
     async set(key, value) {
-      const encoded = Buffer.from(encoder.encode(value))
-      await redis.hset(options.key, key.toString(), encoded)
+      const encoded = encoder.encode(value)
+      const buffer = Buffer.from(
+        encoded.buffer,
+        encoded.byteOffset,
+        encoded.byteLength
+      )
+
+      await redis.hset(options.key, key.toString(), buffer)
     },
   }
 
