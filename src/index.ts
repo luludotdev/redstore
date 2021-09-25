@@ -1,9 +1,8 @@
-import { Decoder, Encoder } from '@msgpack/msgpack'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
-import { Buffer } from 'node:buffer'
+import type { Buffer } from 'node:buffer'
 import { chunk, zip } from './arrayUtils.js'
-import { codec } from './codecs.js'
+import { createCodec } from './msgpack.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
@@ -58,8 +57,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     ? options.redis
     : new Redis(options.redis)
 
-  const encoder = new Encoder(codec)
-  const decoder = new Decoder(codec)
+  const { encode, decode } = createCodec()
 
   const genKey: (key: unknown) => string = key => {
     if (typeof key === 'string') return key
@@ -83,7 +81,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
       const value = await redis.hgetBuffer(storeKey, genKey(key))
       if (value === null) return defaultValue
 
-      const decoded = decoder.decode(value)
+      const decoded = decode(value)
       return decoded
     },
 
@@ -93,13 +91,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     },
 
     async set(key, value) {
-      const encoded = encoder.encode(value)
-      const buffer = Buffer.from(
-        encoded.buffer,
-        encoded.byteOffset,
-        encoded.byteLength
-      )
-
+      const buffer = encode(value)
       await redis.hset(storeKey, genKey(key), buffer)
     },
 
@@ -141,7 +133,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
         const zipped = zip(keys, values)
 
         for (const [key, rawValue] of zipped) {
-          const value = decoder.decode(rawValue as Buffer)
+          const value = decode(rawValue as Buffer)
 
           // Hacky fix to make generics work
           yield [key, value] as any
