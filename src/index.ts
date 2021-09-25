@@ -1,5 +1,7 @@
+import { Decoder, Encoder } from '@msgpack/msgpack'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
+import { Buffer } from 'node:buffer'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
@@ -10,6 +12,11 @@ interface AsyncProxy<T extends {}> {
 }
 
 interface Options {
+  /**
+   * Redis Key
+   */
+  key: string
+
   /**
    * Redis Connection
    */
@@ -27,15 +34,21 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     ? options.redis
     : new Redis(options.redis)
 
+  const encoder = new Encoder()
+  const decoder = new Decoder()
+
   const proxy: AsyncProxy<T> = {
     async get(key, defaultValue) {
-      // TODO
-      console.log('get', { key })
+      const value = await redis.hgetBuffer(options.key, key.toString())
+      if (value === null) return defaultValue
+
+      const decoded = decoder.decode(value)
+      return decoded
     },
 
     async set(key, value) {
-      // TODO
-      console.log('set', { key, value })
+      const encoded = Buffer.from(encoder.encode(value))
+      await redis.hset(options.key, key.toString(), encoded)
     },
   }
 
