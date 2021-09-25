@@ -41,6 +41,13 @@ interface Options {
    * Defaults to `10`
    */
   scanSize?: number
+
+  /**
+   * Enable per-key gzip compression
+   *
+   * Defaults to `false`
+   */
+  compress?: boolean
 }
 
 /**
@@ -57,7 +64,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     ? options.redis
     : new Redis(options.redis)
 
-  const { encode, decode } = createCodec()
+  const { encode, decode } = createCodec(options.compress)
 
   const genKey: (key: unknown) => string = key => {
     if (typeof key === 'string') return key
@@ -81,7 +88,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
       const value = await redis.hgetBuffer(storeKey, genKey(key))
       if (value === null) return defaultValue
 
-      const decoded = decode(value)
+      const decoded = await decode(value)
       return decoded
     },
 
@@ -91,7 +98,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     },
 
     async set(key, value) {
-      const buffer = encode(value)
+      const buffer = await encode(value)
       await redis.hset(storeKey, genKey(key), buffer)
     },
 
@@ -133,7 +140,8 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
         const zipped = zip(keys, values)
 
         for (const [key, rawValue] of zipped) {
-          const value = decode(rawValue as Buffer)
+          // eslint-disable-next-line no-await-in-loop
+          const value = await decode(rawValue as Buffer)
 
           // Hacky fix to make generics work
           yield [key, value] as any
