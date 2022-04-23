@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { decode, encode, ExtensionCodec } from '@msgpack/msgpack'
 
 const codec = new ExtensionCodec()
@@ -10,14 +11,14 @@ const enum CodecType {
 // Set<T>
 codec.register({
   type: CodecType.Set,
-  encode: (object: unknown): Uint8Array | null => {
+  encode(object: unknown): Uint8Array | null {
     if (object instanceof Set) {
       return encode([...object])
     }
 
     return null
   },
-  decode: (data: Uint8Array) => {
+  decode(data: Uint8Array) {
     const array = decode(data) as unknown[]
     return new Set(array)
   },
@@ -26,14 +27,14 @@ codec.register({
 // Map<K, V>
 codec.register({
   type: CodecType.Map,
-  encode: (object: unknown): Uint8Array | null => {
+  encode(object: unknown): Uint8Array | null {
     if (object instanceof Map) {
       return encode([...object])
     }
 
     return null
   },
-  decode: (data: Uint8Array) => {
+  decode(data: Uint8Array) {
     const array = decode(data) as Array<[unknown, unknown]>
     return new Map(array)
   },
@@ -42,7 +43,7 @@ codec.register({
 // BigInt
 codec.register({
   type: CodecType.BigInt,
-  encode: (input: unknown) => {
+  encode(input: unknown) {
     if (typeof input === 'bigint') {
       if (
         input <= Number.MAX_SAFE_INTEGER &&
@@ -56,7 +57,7 @@ codec.register({
 
     return null
   },
-  decode: (data: Uint8Array) => {
+  decode(data: Uint8Array) {
     const decoded = decode(data)
     if (typeof decoded === 'string') return BigInt(decoded)
     if (typeof decoded === 'number') return BigInt(decoded)
