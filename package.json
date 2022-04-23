@@ -3,8 +3,14 @@
   "version": "0.2.0",
   "packageManager": "yarn@3.2.0",
   "type": "module",
-  "exports": "./lib/index.js",
+  "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
   "sideEffects": false,
   "files": [
     "lib/**/*"
