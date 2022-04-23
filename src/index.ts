@@ -129,6 +129,10 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
         }
 
         const results = await p.exec()
+        if (results === null) {
+          throw new Error('`results` is null')
+        }
+
         const errors = results.map(([error]) => error)
         const error = errors.find(error => error !== null)
         if (error instanceof Error) {
@@ -136,7 +140,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
         }
 
         const keys = chunked.map(([key]) => key)
-        const values = results.map(([, value]) => value as unknown)
+        const values = results.map(([, value]) => value)
         const zipped = zip(keys, values)
 
         for (const [key, rawValue] of zipped) {
