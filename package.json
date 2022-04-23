@@ -25,7 +25,7 @@
   "author": "Jack Baron <jackmbaron@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=12.20"
+    "node": ">=16"
   },
   "devDependencies": {
     "@types/ioredis": "^4.27.4",
