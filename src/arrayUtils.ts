@@ -10,14 +10,3 @@ export function chunk<T>(array: T[], size: number): T[][] {
 
   return results
 }
-
-export function zip<T, U>(first: T[], second: U[]): Array<[T, U]> {
-  const length = Math.min(first.length, second.length)
-  const result: Array<[T, U]> = Array.from({ length })
-
-  for (let idx = 0; idx < length; idx++) {
-    result[idx] = [first[idx], second[idx]]
-  }
-
-  return result
-}

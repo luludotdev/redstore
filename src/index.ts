@@ -1,7 +1,7 @@
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import type { Buffer } from 'node:buffer'
-import { chunk, zip } from './arrayUtils.js'
+import { chunk } from './arrayUtils.js'
 import { createCodec } from './msgpack.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -119,33 +119,15 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
     },
 
     async *entries() {
-      const stream = redis.hscanStream(storeKey, { count: scanSize })
+      const stream = redis.hscanBufferStream(storeKey, { count: scanSize })
       for await (const data of stream) {
-        const chunked = chunk(data, 2)
+        const chunked = chunk(data as Buffer[], 2)
 
-        const p = redis.pipeline()
-        for (const [key] of chunked) {
-          p.hgetBuffer(storeKey, key as string)
-        }
+        for (const [rawKey, rawValue] of chunked) {
+          const key = rawKey.toString('utf8')
 
-        const results = await p.exec()
-        if (results === null) {
-          throw new Error('`results` is null')
-        }
-
-        const errors = results.map(([error]) => error)
-        const error = errors.find(error => error !== null)
-        if (error instanceof Error) {
-          throw error
-        }
-
-        const keys = chunked.map(([key]) => key)
-        const values = results.map(([, value]) => value)
-        const zipped = zip(keys, values)
-
-        for (const [key, rawValue] of zipped) {
           // eslint-disable-next-line no-await-in-loop
-          const value = await decode(rawValue as Buffer)
+          const value = await decode(rawValue)
 
           // Hacky fix to make generics work
           yield [key, value] as any
