@@ -1,8 +1,8 @@
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import type { Buffer } from 'node:buffer'
-import { chunk } from './arrayUtils.js'
 import { createCodec } from './msgpack.js'
+import { chunk } from './utils.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {

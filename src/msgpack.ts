@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer'
 import { promisify } from 'node:util'
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib'
 import { codec as extensionCodecs } from './codecs.js'
+import { nullsToUndefined } from './utils.js'
 
 const gzip = promisify(gzipCb)
 const gunzip = promisify(gunzipCb)
@@ -36,12 +37,11 @@ export const createCodec = (level?: number) => {
     },
 
     async decode(buffer) {
-      if (compress) {
-        const decomp = await gunzip(buffer)
-        return decoder.decode(decomp)
-      }
+      const buf = compress ? await gunzip(buffer) : buffer
+      const decoded = decoder.decode(buf)
 
-      return decoder.decode(buffer)
+      const transformed = nullsToUndefined(decoded)
+      return transformed
     },
   }
 
