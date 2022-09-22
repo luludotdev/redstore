@@ -22,6 +22,8 @@ interface AsyncProxy<T extends {}> {
   set<K extends keyof T>(key: K, value: T[K]): Promise<void>
 
   values<K extends keyof T>(): AsyncIterable<T[K]>
+
+  disconnect(): Promise<void>
 }
 
 interface Options {
@@ -130,6 +132,10 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
           yield [key, value] as any
         }
       }
+    },
+
+    async disconnect() {
+      await redis.quit()
     },
   }
 
