@@ -35,7 +35,7 @@ codec.register({
     return null
   },
   decode(data: Uint8Array) {
-    const array = decode(data) as Array<[unknown, unknown]>
+    const array = decode(data) as [unknown, unknown][]
     return new Map(array)
   },
 })

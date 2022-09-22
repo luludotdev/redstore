@@ -1,6 +1,6 @@
+import type { Buffer } from 'node:buffer'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
-import type { Buffer } from 'node:buffer'
 import { createCodec } from './msgpack.js'
 import { chunk } from './utils.js'
 
@@ -50,56 +50,53 @@ interface Options {
   compressLevel?: number
 }
 
+const redisKey: (key: unknown) => string = key => {
+  if (typeof key === 'string') return key
+  if (typeof key === 'symbol') return key.toString()
+  if (typeof key === 'number') return key.toString(10)
+
+  throw new TypeError('invalid key type')
+}
+
 /**
  * Create a new Async Store
- * @param options Store Options
+ *
+ * @param options - Store Options
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
   const storeKey = options.key
   const scanSize = options.scanSize ?? 10
 
-  // eslint-disable-next-line prettier/prettier
-  const redis = options.redis instanceof Redis
-    ? options.redis
-    : new Redis(options.redis)
-
+  // prettier-ignore
+  const redis = options.redis instanceof Redis ? options.redis : new Redis(options.redis)
   const { encode, decode } = createCodec(options.compressLevel)
-
-  const genKey: (key: unknown) => string = key => {
-    if (typeof key === 'string') return key
-    if (typeof key === 'symbol') return key.toString()
-    if (typeof key === 'number') return key.toString(10)
-
-    throw new TypeError('invalid key type')
-  }
 
   const proxy: AsyncProxy<T> = {
     async clear(key) {
-      await redis.del(storeKey, genKey(key))
+      await redis.del(storeKey, redisKey(key))
     },
 
     async delete(key) {
-      const status = await redis.hdel(storeKey, genKey(key))
+      const status = await redis.hdel(storeKey, redisKey(key))
       return status === 1
     },
 
     async get(key, defaultValue) {
-      const value = await redis.hgetBuffer(storeKey, genKey(key))
+      const value = await redis.hgetBuffer(storeKey, redisKey(key))
       if (value === null) return defaultValue
 
-      const decoded = await decode(value)
-      return decoded
+      return decode(value)
     },
 
     async has(key) {
-      const status = await redis.hexists(storeKey, genKey(key))
+      const status = await redis.hexists(storeKey, redisKey(key))
       return status === 1
     },
 
     async set(key, value) {
       const buffer = await encode(value)
-      await redis.hset(storeKey, genKey(key), buffer)
+      await redis.hset(storeKey, redisKey(key), buffer)
     },
 
     async *keys() {

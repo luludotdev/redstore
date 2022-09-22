@@ -1,7 +1,7 @@
-import { Decoder, Encoder } from '@msgpack/msgpack'
 import { Buffer } from 'node:buffer'
 import { promisify } from 'node:util'
 import { gunzip as gunzipCb, gzip as gzipCb } from 'node:zlib'
+import { Decoder, Encoder } from '@msgpack/msgpack'
 import { codec as extensionCodecs } from './codecs.js'
 import { nullsToUndefined } from './utils.js'
 
@@ -25,12 +25,11 @@ export const createCodec = (level?: number) => {
       const buffer = Buffer.from(
         encoded.buffer,
         encoded.byteOffset,
-        encoded.byteLength
+        encoded.byteLength,
       )
 
       if (compress) {
-        const compressed = await gzip(buffer, { level })
-        return compressed
+        return gzip(buffer, { level })
       }
 
       return buffer
@@ -40,8 +39,7 @@ export const createCodec = (level?: number) => {
       const buf = compress ? await gunzip(buffer) : buffer
       const decoded = decoder.decode(buf)
 
-      const transformed = nullsToUndefined(decoded)
-      return transformed
+      return nullsToUndefined(decoded)
     },
   }
 
