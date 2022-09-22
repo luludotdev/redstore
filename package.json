@@ -1,45 +1,50 @@
 {
   "name": "@lolpants/redstore",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "packageManager": "yarn@3.2.3",
   "type": "module",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./lib/index.js",
-      "types": "./lib/index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "sideEffects": false,
   "files": [
-    "lib/**/*"
+    "dist"
   ],
   "scripts": {
-    "prepack": "yarn run build",
-    "prepublish": "yarn run test",
+    "build": "tsup",
+    "check": "tsc --noEmit --skipLibCheck",
+    "lint": "prettier --check . && eslint src --ext ts",
+    "format": "prettier --write . && eslint src --ext ts --fix",
+    "fmt": "yarn run format",
     "test": "yarn run check && yarn run lint",
-    "check": "yarn run compile --noEmit",
-    "lint": "xo ./src",
-    "clean": "rimraf lib",
-    "compile": "tsc",
-    "build": "yarn run clean && yarn run compile",
-    "dev": "yarn run clean && yarn run compile --watch"
+    "prepack": "yarn run test && yarn run build"
   },
-  "repository": "git@github.com:lolPants/redstore.git",
-  "author": "Jack Baron <jackmbaron@gmail.com>",
+  "author": "Jack Baron <jackmbaron@gmail.com> (https://www.jackbaron.com)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lolPants/redstore.git"
+  },
   "engines": {
-    "node": ">=16"
+    "node": ">=16.9.0"
   },
   "devDependencies": {
-    "@types/node": "^16",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.6.4",
-    "xo": "^0.48.0"
+    "@types/node": "^18.7.18",
+    "eslint": "^8.23.1",
+    "eslint-config-neon": "^0.1.33",
+    "prettier": "^2.7.1",
+    "tsup": "^6.2.3",
+    "typescript": "^4.8.3"
   },
   "dependencies": {
-    "@msgpack/msgpack": "^2.7.2",
-    "ioredis": "^5.0.4"
+    "@msgpack/msgpack": "^2.8.0",
+    "ioredis": "^5.2.3",
+    "tslib": "^2.4.0"
   }
 }
