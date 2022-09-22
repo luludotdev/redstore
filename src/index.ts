@@ -6,7 +6,7 @@ import { chunk } from './utils.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
-  clear<K extends keyof T>(key: K): Promise<void>
+  clear(): Promise<void>
 
   delete<K extends keyof T>(key: K): Promise<boolean>
 
@@ -75,8 +75,8 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
   const { encode, decode } = createCodec(options.compressLevel)
 
   const proxy: AsyncProxy<T> = {
-    async clear(key) {
-      await redis.del(storeKey, redisKey(key))
+    async clear() {
+      await redis.del(storeKey)
     },
 
     async delete(key) {
