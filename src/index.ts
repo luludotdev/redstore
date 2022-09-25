@@ -1,8 +1,8 @@
 import type { Buffer } from 'node:buffer'
+import { chunkStrict as chunk } from '@lolpants/chunk'
 import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import { createCodec } from './msgpack.js'
-import { chunk } from './utils.js'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
