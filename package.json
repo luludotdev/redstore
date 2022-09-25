@@ -35,8 +35,8 @@
     "node": ">=16.9.0"
   },
   "devDependencies": {
-    "@types/node": "^18.7.18",
-    "eslint": "^8.23.1",
+    "@types/node": "^18.7.21",
+    "eslint": "^8.24.0",
     "eslint-config-neon": "^0.1.33",
     "prettier": "^2.7.1",
     "tsup": "^6.2.3",
