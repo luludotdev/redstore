@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { decode, encode, ExtensionCodec } from '@msgpack/msgpack'
 
 const codec = new ExtensionCodec()

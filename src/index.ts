@@ -4,7 +4,6 @@ import Redis from 'ioredis'
 import type { Redis as RedisInterface, RedisOptions } from 'ioredis'
 import { createCodec } from './msgpack.js'
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 interface AsyncProxy<T extends {}> {
   clear(): Promise<void>
 
@@ -65,7 +64,6 @@ const redisKey: (key: unknown) => string = key => {
  *
  * @param options - Store Options
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
 export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
   const storeKey = options.key
   const scanSize = options.scanSize ?? 10
@@ -106,14 +104,14 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
 
       for (const key of keys) {
         // Hacky fix to make generics work
-        yield key as any
+        yield key as never
       }
     },
 
     async *values() {
       for await (const [, value] of this.entries()) {
         // Hacky fix to make generics work
-        yield value as any
+        yield value as never
       }
     },
 
@@ -129,7 +127,7 @@ export function createStore<T extends {}>(options: Options): AsyncProxy<T> {
           const value = await decode(rawValue)
 
           // Hacky fix to make generics work
-          yield [key, value] as any
+          yield [key, value] as never
         }
       }
     },

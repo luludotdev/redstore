@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-types
 type RecursivelyReplaceNullWithUndefined<T> = T extends null
   ? undefined
   : T extends Date
