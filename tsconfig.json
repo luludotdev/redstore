@@ -22,9 +22,8 @@
     // Emit
     "declaration": true,
     "declarationMap": true,
-    "importHelpers": true,
-    "noEmitHelpers": true,
-    "importsNotUsedAsValues": "error",
+    "importHelpers": false,
+    "noEmitHelpers": false,
     "inlineSources": true,
     "newLine": "lf",
     "outDir": "dist",
